@@ -14,7 +14,7 @@ export class OrdersService {
 
   private readonly logger = new Logger(OrdersService.name);
 
-  async createOrder(request: CreateOrderRequestDto) {
+  async createOrder(request: CreateOrderRequestDto, authentication: string) {
     this.logger.log(request);
     const session = await this.ordersRepository.startTransaction();
     try {
@@ -22,13 +22,13 @@ export class OrdersService {
       await lastValueFrom(
         this.billingClient.emit('order_created', {
           request,
+          Authentication: authentication,
         }),
       );
       await session.commitTransaction();
       return order;
     } catch (err) {
       await session.abortTransaction();
-      console.log(err);
       this.logger.error(err);
       throw err;
     }
